@@ -1,0 +1,145 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stormer - Collaborative Brainstorming</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/templates.css">
+    <link rel="stylesheet" href="/css/layout.css">
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <div id="home-screen" class="centered-content">
+      <h1 id="app-title">Stormer</h1>
+      <div class="button-container">
+        <button onclick="showCreateForm()" class="primary-button large-button">Create Session</button>
+        <button onclick="showJoinForm()" class="secondary-button large-button">Join Session</button>
+      </div>
+      
+      <form id="create-form" onsubmit="handleCreateSession(event)">
+        <div class="create-container">
+          <div class="create-form-section">
+            <h2>Create New Session</h2>
+            <input type="text" id="create-username" placeholder="Your Name" required>
+            <input type="text" id="create-topic" placeholder="Session Topic" required>
+            <button type="submit" class="primary-button">Create</button>
+          </div>
+          
+          <div class="templates-section">
+            <h3>Choose Template</h3>
+            <div class="template-card">
+              <input type="radio" name="template" value="default" id="default-template-radio" checked>
+              <label for="default-template-radio">
+                <h4>Classic Brainstorming</h4>
+                <p>Free-form ideation with real-time collaboration</p>
+              </label>
+            </div>
+            <div class="template-card">
+              <input type="radio" name="template" value="todo" id="todo-template-radio">
+              <label for="todo-template-radio">
+                <h4>To-Do List</h4>
+                <p>Organize tasks with priorities and due dates</p>
+              </label>
+            </div>
+            <div class="template-card">
+              <input type="radio" name="template" value="swot" id="swot-template-radio">
+              <label for="swot-template-radio">
+                <h4>SWOT Analysis</h4>
+                <p>Analyze Strengths, Weaknesses, Opportunities, and Threats</p>
+              </label>
+            </div>
+          </div>
+        </div>
+      </form>
+      
+      <form id="join-form" onsubmit="handleJoinSession(event)">
+        <h2>Join Session</h2>
+        <input type="text" id="join-username" placeholder="Your Name" required>
+        <input type="text" id="join-code" placeholder="Session Code" required>
+        <button type="submit" class="primary-button">Join</button>
+      </form>
+    </div>
+    
+    <div id="brainstorm-container">
+      <div class="app-header">
+        <h1 id="app-logo" onclick="returnToHome()">Stormer</h1>
+        <div class="header-actions">
+          <button id="end-session-btn" onclick="showEndSessionModal()" class="secondary-button">End Session</button>
+        </div>
+      </div>
+      <div id="session-info">
+        <h2>Session Code: <span id="session-code-display"></span></h2>
+        <div id="users-list"></div>
+      </div>
+      
+      <div class="brainstorm-layout">
+        <div class="input-section">
+          <!-- Default Template -->
+          <div id="default-template">
+            <form onsubmit="submitIdea(event)">
+              <textarea id="idea-input" placeholder="Share your idea..." rows="3"></textarea>
+              <button type="submit" class="primary-button">Share</button>
+            </form>
+          </div>
+          
+          <!-- Todo List Template -->
+          <div id="todo-template" style="display: none;">
+            <form onsubmit="submitTodo(event)">
+              <input type="text" id="todo-input" placeholder="New task...">
+              <select id="todo-priority">
+                <option value="high">High Priority</option>
+                <option value="medium" selected>Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+              <input type="date" id="todo-date" required>
+              <button type="submit" class="primary-button">Add Task</button>
+            </form>
+          </div>
+          
+          <!-- SWOT Analysis Template -->
+          <div id="swot-template" style="display: none;">
+            <div class="swot-nav">
+              <button onclick="scrollToSwotSection('strengths')" class="swot-nav-button strengths">Strengths</button>
+              <button onclick="scrollToSwotSection('weaknesses')" class="swot-nav-button weaknesses">Weaknesses</button>
+              <button onclick="scrollToSwotSection('opportunities')" class="swot-nav-button opportunities">Opportunities</button>
+              <button onclick="scrollToSwotSection('threats')" class="swot-nav-button threats">Threats</button>
+            </div>
+            <form onsubmit="submitSwot(event)">
+              <select id="swot-type">
+                <option value="strengths">Strength</option>
+                <option value="weaknesses">Weakness</option>
+                <option value="opportunities">Opportunity</option>
+                <option value="threats">Threat</option>
+              </select>
+              <input type="text" id="swot-input" placeholder="Add a point...">
+              <button type="submit" class="primary-button">Add</button>
+            </form>
+          </div>
+        </div>
+        
+        <div class="ideas-section">
+          <div id="ideas-container"></div>
+          <div id="error-message" class="error-message" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- End Session Modal -->
+    <div id="end-session-modal" class="modal">
+      <div class="modal-content">
+        <h2>End Session</h2>
+        <p>Would you like to download the session data before ending?</p>
+        <div class="modal-actions">
+          <button onclick="downloadSessionData()" class="primary-button">Download & End</button>
+          <button onclick="endSessionWithoutDownload()" class="secondary-button">End Without Download</button>
+          <button onclick="closeModal()" class="secondary-button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/socket.js"></script>
+    <script src="/js/templates.js"></script>
+  </body>
+</html>

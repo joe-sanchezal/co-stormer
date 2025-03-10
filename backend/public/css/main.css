@@ -1,0 +1,308 @@
+:root {
+  --primary-color: #8a2be2; /* Purple */
+  --secondary-color: #6a0dad; /* Darker purple */
+  --accent-color: #9370db; /* Medium purple */
+  --background-color: #121212; /* Dark background */
+  --text-color: #ffffff; /* White text */
+  --card-background: #1e1e1e; /* Slightly lighter than background */
+  --input-background: #2d2d2d; /* Input field background */
+  --notification-bg: #2d1f4d; /* Purple-tinted dark background */
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  color: var(--primary-color);
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+h1:hover {
+  color: var(--accent-color);
+  text-shadow: 0 0 15px rgba(138, 43, 226, 0.8);
+}
+
+.container {
+  text-align: center;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 80vh;
+  justify-content: center;
+}
+
+/* Form styles */
+.form-group {
+  margin-bottom: 20px;
+}
+
+input[type="text"], input[type="date"], select, textarea {
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--input-background);
+  color: var(--text-color);
+  font-size: 16px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+
+input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.3);
+}
+
+textarea {
+  height: 200px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+button {
+  padding: 12px 20px;
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+button:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--card-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* New styles for the app header and logo */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+#app-logo {
+  margin: 0;
+  font-size: 2rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Centered content for home screen */
+.centered-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+/* Larger buttons for home screen */
+.large-button {
+  padding: 16px 32px;
+  font-size: 1.2rem;
+  min-width: 200px;
+  margin: 10px;
+}
+
+.button-container {
+  display: flex;
+  gap: 20px;
+  margin: 30px 0;
+}
+
+/* Modal styles for end session */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: var(--card-background);
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.primary-button {
+  background-color: var(--primary-color);
+}
+
+.secondary-button {
+  background-color: var(--secondary-color);
+}
+
+/* Todo item priority styles */
+.todo-item.high-priority {
+    background-color: rgba(255, 69, 0, 0.15); /* Semi-transparent red */
+    border-left: 4px solid rgba(255, 69, 0, 0.8);
+}
+
+.todo-item.medium-priority {
+    background-color: rgba(255, 165, 0, 0.15); /* Semi-transparent orange */
+    border-left: 4px solid rgba(255, 165, 0, 0.8);
+}
+
+.todo-item.low-priority {
+    background-color: rgba(46, 204, 113, 0.15); /* Semi-transparent green */
+    border-left: 4px solid rgba(46, 204, 113, 0.8);
+}
+
+.todo-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.todo-item.completed {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.todo-checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--primary-color);
+    border-radius: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+    color: var(--primary-color);
+}
+
+.todo-content {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.todo-meta {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+}
+
+/* SWOT Analysis styles */
+.swot-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: var(--card-background);
+    border-radius: 5px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.swot-nav-button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 5px;
+    opacity: 0.7;
+    transform: none;
+}
+
+.swot-nav-button:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.swot-nav-button.active {
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.swot-nav-button.strengths {
+    background-color: #4CAF50;
+}
+
+.swot-nav-button.weaknesses {
+    background-color: #f44336;
+}
+
+.swot-nav-button.opportunities {
+    background-color: #2196F3;
+}
+
+.swot-nav-button.threats {
+    background-color: #FF9800;
+}
+
+.swot-quadrant {
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    background: var(--card-background);
+    transition: all 0.3s ease;
+}
+
+.swot-quadrant.active {
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
+    transform: translateY(-5px);
+} 
