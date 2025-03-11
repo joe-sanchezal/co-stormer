@@ -18,8 +18,14 @@ const io = socketIo(server, {
   path: '/socket.io',
   transports: ['websocket', 'polling'],
   pingTimeout: 60000, // Increase timeout for Vercel
-  pingInterval: 25000 // Adjust ping interval
+  pingInterval: 25000, // Adjust ping interval
+  serveClient: false // Don't serve the client, we're using CDN
 });
+
+// Log when the server starts
+console.log("Server starting...");
+console.log("Environment:", process.env.NODE_ENV);
+console.log("Vercel URL:", process.env.VERCEL_URL);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
@@ -31,7 +37,12 @@ app.get("/", (req, res) => {
 
 // Health check endpoint for Vercel
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", environment: process.env.NODE_ENV, url: process.env.VERCEL_URL });
+  res.json({ 
+    status: "ok", 
+    environment: process.env.NODE_ENV, 
+    url: process.env.VERCEL_URL,
+    socketio: "configured"
+  });
 });
 
 // Store sessions, users and ideas
