@@ -90,6 +90,12 @@ function handleConnectionFailure() {
         // Show fallback UI
         const fallbackMessage = document.getElementById('fallback-message');
         if (fallbackMessage) {
+            // Update fallback message to mention database
+            const messageElement = fallbackMessage.querySelector('.fallback-content p:first-of-type');
+            if (messageElement) {
+                messageElement.textContent = "We're having trouble connecting to our database and real-time services.";
+            }
+            
             fallbackMessage.style.display = 'flex';
         }
         
