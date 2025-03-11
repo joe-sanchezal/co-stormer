@@ -11,10 +11,14 @@ const server = http.createServer(app);
 // Configure CORS for socket.io in production
 const io = socketIo(server, {
   cors: {
-    origin: process.env.VERCEL_URL || "http://localhost:3001",
+    origin: "*", // Allow all origins
     methods: ["GET", "POST"],
     credentials: true
-  }
+  },
+  path: '/socket.io',
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000, // Increase timeout for Vercel
+  pingInterval: 25000 // Adjust ping interval
 });
 
 // Serve static files
@@ -27,11 +31,28 @@ app.get("/", (req, res) => {
 
 // Health check endpoint for Vercel
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", environment: process.env.NODE_ENV, url: process.env.VERCEL_URL });
 });
 
 // Store sessions, users and ideas
-const sessions = new Map();
+// Use global variable to persist data between serverless function invocations
+global.stormerSessions = global.stormerSessions || new Map();
+const sessions = global.stormerSessions;
+
+// Debug endpoint to check active sessions
+app.get("/api/debug/sessions", (req, res) => {
+  const sessionData = Array.from(sessions.entries()).map(([code, session]) => ({
+    code,
+    users: session.users.length,
+    ideas: session.ideas.length,
+    template: session.template
+  }));
+  
+  res.json({
+    sessionCount: sessions.size,
+    sessions: sessionData
+  });
+});
 
 function generateSessionCode() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -45,13 +66,27 @@ function generateSessionCode() {
   return code;
 }
 
+// Socket.io error handling
+io.on("connect_error", (err) => {
+  console.error("Socket.IO connection error:", err);
+});
+
+io.on("error", (err) => {
+  console.error("Socket.IO error:", err);
+});
+
 // Socket.io connection handling
 io.on("connection", (socket) => {
-  console.log("User connected");
+  console.log("User connected with ID:", socket.id);
   let currentSession = null;
+
+  socket.on("error", (error) => {
+    console.error("Socket error for client:", socket.id, error);
+  });
 
   // Handle session creation
   socket.on("create-session", (data) => {
+    console.log("Creating session with data:", data);
     const code = generateSessionCode();
     const session = {
       code,
@@ -67,6 +102,8 @@ io.on("connection", (socket) => {
     socket.username = data.username;
     socket.session = code;
     
+    console.log(`Session created: ${code} by ${data.username}`);
+    
     socket.emit("session-created", {
       code,
       username: data.username,
@@ -78,13 +115,16 @@ io.on("connection", (socket) => {
 
   // Handle session joining
   socket.on("join-session", (data) => {
+    console.log("Join session request:", data);
     const session = sessions.get(data.code);
     if (!session) {
+      console.log(`Session not found: ${data.code}`);
       socket.emit("error-message", "Session not found");
       return;
     }
     
     if (session.users.includes(data.username)) {
+      console.log(`Username already taken: ${data.username}`);
       socket.emit("error-message", "Username already taken");
       return;
     }
@@ -93,6 +133,8 @@ io.on("connection", (socket) => {
     socket.username = data.username;
     socket.session = data.code;
     session.users.push(data.username);
+    
+    console.log(`User ${data.username} joined session ${data.code}`);
     
     socket.emit("session-joined", {
       code: data.code,
@@ -194,7 +236,14 @@ if (process.env.NODE_ENV !== 'production') {
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
   });
+} else {
+  server.listen(PORT, () => {
+    console.log(`Server running in production mode on port ${PORT}`);
+  });
 }
 
-// Export for Vercel
+// For Vercel serverless functions
 module.exports = app;
+
+// Also export server for Socket.IO
+module.exports.server = server;

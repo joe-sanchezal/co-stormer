@@ -8,8 +8,15 @@
   ],
   "routes": [
     {
+      "src": "/socket.io/(.*)",
+      "dest": "backend/server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "backend/server.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 } 

@@ -1,11 +1,61 @@
-const socket = io();
+// Initialize socket with proper configuration for Vercel
+const socket = io({
+    path: '/socket.io',
+    transports: ['websocket', 'polling'],
+    secure: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+});
 let currentUser = '';
 let currentSession = '';
 let currentTemplate = '';
 
+// Connection status management
+function updateConnectionStatus(status) {
+    const statusElement = document.getElementById('connection-status');
+    const statusText = statusElement.querySelector('.status-text');
+    
+    statusElement.className = `connection-status ${status}`;
+    
+    switch (status) {
+        case 'connected':
+            statusText.textContent = 'Connected';
+            break;
+        case 'disconnected':
+            statusText.textContent = 'Disconnected';
+            break;
+        case 'connecting':
+            statusText.textContent = 'Connecting...';
+            break;
+    }
+}
+
 // Socket event listeners
 socket.on('connect', () => {
     console.log('Connected to server');
+    updateConnectionStatus('connected');
+});
+
+socket.on('disconnect', () => {
+    console.log('Disconnected from server');
+    updateConnectionStatus('disconnected');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+    updateConnectionStatus('disconnected');
+    showError('Connection error. Please try again later.');
+});
+
+socket.on('connecting', () => {
+    console.log('Connecting to server...');
+    updateConnectionStatus('connecting');
+});
+
+socket.on('reconnecting', () => {
+    console.log('Reconnecting to server...');
+    updateConnectionStatus('connecting');
 });
 
 socket.on('session-created', (data) => {
@@ -128,8 +178,35 @@ function handleCreateSession(event) {
         return;
     }
     
+    // Show loading state
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Creating...';
+    
     currentTemplate = template;
     socket.emit('create-session', { username, topic, template });
+    
+    // Set timeout for server response
+    const timeout = setTimeout(() => {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+        showError('Server response timeout. Please try again.');
+    }, 5000);
+    
+    // Clear timeout when session is created
+    socket.once('session-created', () => {
+        clearTimeout(timeout);
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    });
+    
+    // Clear timeout on error
+    socket.once('error-message', () => {
+        clearTimeout(timeout);
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    });
 }
 
 function handleJoinSession(event) {
@@ -142,7 +219,34 @@ function handleJoinSession(event) {
         return;
     }
     
+    // Show loading state
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Joining...';
+    
     socket.emit('join-session', { username, code });
+    
+    // Set timeout for server response
+    const timeout = setTimeout(() => {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+        showError('Server response timeout. Please try again.');
+    }, 5000);
+    
+    // Clear timeout when session is joined
+    socket.once('session-joined', () => {
+        clearTimeout(timeout);
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    });
+    
+    // Clear timeout on error
+    socket.once('error-message', () => {
+        clearTimeout(timeout);
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    });
 }
 
 function submitIdea(event) {
@@ -241,4 +345,7 @@ function endSession() {
     
     // Reset home screen
     resetHomeScreen();
-} 
+}
+
+// Initialize connection status
+updateConnectionStatus(socket.connected ? 'connected' : 'connecting'); 

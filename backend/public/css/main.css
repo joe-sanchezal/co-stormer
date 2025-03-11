@@ -305,4 +305,45 @@ button:hover {
 .swot-quadrant.active {
     box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
     transform: translateY(-5px);
+}
+
+/* Connection status indicator */
+.connection-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  background-color: var(--card-background);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.status-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.connection-status.connected .status-icon {
+  background-color: #4CAF50;
+}
+
+.connection-status.disconnected .status-icon {
+  background-color: #f44336;
+}
+
+.connection-status.connecting .status-icon {
+  background-color: #FF9800;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
 } 
