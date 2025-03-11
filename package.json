@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "build": "echo 'No build step required'"
+    "build": "echo 'Building Stormer application...'",
+    "vercel-build": "echo 'Vercel build completed successfully'"
   },
   "engines": {
     "node": ">=14.0.0"
