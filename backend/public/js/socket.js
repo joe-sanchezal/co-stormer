@@ -2,29 +2,131 @@
 const currentUrl = window.location.origin;
 console.log("Connecting to Socket.IO at:", currentUrl);
 
+// Track connection attempts
+let connectionAttempts = 0;
+const MAX_CONNECTION_ATTEMPTS = 3;
+
 // Initialize socket with proper configuration for Vercel
 let socket;
-try {
-    socket = io(currentUrl, {
-        path: '/socket.io',
-        transports: ['websocket', 'polling'],
-        secure: true,
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
-    });
-    console.log("Socket.IO initialized successfully");
-} catch (error) {
-    console.error("Error initializing Socket.IO:", error);
-    // Show error to user
-    setTimeout(() => {
-        const errorDiv = document.getElementById('error-message');
-        if (errorDiv) {
-            errorDiv.textContent = "Failed to connect to server. Please refresh the page.";
-            errorDiv.style.display = 'block';
-        }
-    }, 1000);
+let isConnected = false;
+
+function initializeSocket() {
+    connectionAttempts++;
+    console.log(`Connection attempt ${connectionAttempts}/${MAX_CONNECTION_ATTEMPTS}`);
+    
+    try {
+        socket = io(currentUrl, {
+            path: '/socket.io',
+            transports: ['polling', 'websocket'], // Prioritize polling over websockets for Vercel
+            secure: true,
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+            timeout: 20000, // Increase timeout
+            forceNew: true,
+            upgrade: false // Prevent transport upgrade to websocket
+        });
+        console.log("Socket.IO initialized successfully");
+        
+        // Set up event listeners
+        setupSocketListeners();
+        
+    } catch (error) {
+        console.error("Error initializing Socket.IO:", error);
+        handleConnectionFailure();
+    }
 }
+
+function setupSocketListeners() {
+    if (!socket) return;
+    
+    socket.on('connect', () => {
+        console.log('Connected to server');
+        isConnected = true;
+        updateConnectionStatus('connected');
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+        isConnected = false;
+        updateConnectionStatus('disconnected');
+    });
+    
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+        updateConnectionStatus('disconnected');
+        handleConnectionFailure();
+    });
+    
+    socket.on('connecting', () => {
+        console.log('Connecting to server...');
+        updateConnectionStatus('connecting');
+    });
+    
+    socket.on('reconnecting', () => {
+        console.log('Reconnecting to server...');
+        updateConnectionStatus('connecting');
+    });
+    
+    // Initialize connection status
+    updateConnectionStatus(socket.connected ? 'connected' : 'connecting');
+    
+    // Set up other event listeners
+    setupEventListeners();
+}
+
+function handleConnectionFailure() {
+    // Show error to user
+    showError('Connection to server failed. Please try again later.');
+    
+    // Try to reconnect if we haven't exceeded max attempts
+    if (connectionAttempts < MAX_CONNECTION_ATTEMPTS) {
+        setTimeout(() => {
+            initializeSocket();
+        }, 2000 * connectionAttempts); // Increase delay with each attempt
+    } else {
+        showError('Could not connect to the server after multiple attempts. Please try again later or contact support.');
+        
+        // Show fallback UI
+        const fallbackMessage = document.getElementById('fallback-message');
+        if (fallbackMessage) {
+            fallbackMessage.style.display = 'flex';
+        }
+        
+        // Enable limited functionality mode
+        enableLimitedFunctionalityMode();
+    }
+}
+
+function enableLimitedFunctionalityMode() {
+    console.log("Enabling limited functionality mode");
+    
+    // Disable real-time dependent buttons
+    const createButton = document.querySelector('button.primary-button.large-button');
+    if (createButton) {
+        createButton.disabled = true;
+        createButton.title = "Real-time connection required";
+    }
+    
+    // Add a message to the forms
+    const createForm = document.getElementById('create-form');
+    const joinForm = document.getElementById('join-form');
+    
+    const limitedMessage = document.createElement('div');
+    limitedMessage.className = 'limited-mode-message';
+    limitedMessage.innerHTML = '<p>Real-time connection is currently unavailable. Please try again later.</p>';
+    
+    if (createForm) {
+        createForm.prepend(limitedMessage.cloneNode(true));
+    }
+    
+    if (joinForm) {
+        joinForm.prepend(limitedMessage.cloneNode(true));
+    }
+}
+
+// Start the connection process
+initializeSocket();
 
 // Define variables after socket initialization
 let currentUser = '';
@@ -54,36 +156,8 @@ function updateConnectionStatus(status) {
     }
 }
 
-// Socket event listeners
-if (socket) {
-    socket.on('connect', () => {
-        console.log('Connected to server');
-        updateConnectionStatus('connected');
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('Disconnected from server');
-        updateConnectionStatus('disconnected');
-    });
-    
-    socket.on('connect_error', (error) => {
-        console.error('Connection error:', error);
-        updateConnectionStatus('disconnected');
-        showError('Connection error. Please try again later.');
-    });
-    
-    socket.on('connecting', () => {
-        console.log('Connecting to server...');
-        updateConnectionStatus('connecting');
-    });
-    
-    socket.on('reconnecting', () => {
-        console.log('Reconnecting to server...');
-        updateConnectionStatus('connecting');
-    });
-    
-    // Initialize connection status
-    updateConnectionStatus(socket.connected ? 'connected' : 'connecting');
+function setupEventListeners() {
+    if (!socket) return;
     
     socket.on('session-created', (data) => {
         currentSession = data.code;
@@ -122,6 +196,13 @@ if (socket) {
 
     socket.on('error-message', (message) => {
         showError(message);
+    });
+    
+    socket.on('session-ended', (data) => {
+        showError(data.message);
+        setTimeout(() => {
+            resetHomeScreen();
+        }, 2000);
     });
 }
 

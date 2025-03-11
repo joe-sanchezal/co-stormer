@@ -12,20 +12,29 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: "*", // Allow all origins
-    methods: ["GET", "POST"],
-    credentials: true
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
   },
   path: '/socket.io',
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'], // Prioritize polling over websockets for Vercel
   pingTimeout: 60000, // Increase timeout for Vercel
   pingInterval: 25000, // Adjust ping interval
-  serveClient: false // Don't serve the client, we're using CDN
+  serveClient: false, // Don't serve the client, we're using CDN
+  allowUpgrades: false, // Prevent transport upgrade to websocket
+  cookie: false, // Disable cookies
+  perMessageDeflate: false // Disable WebSocket compression
 });
 
 // Log when the server starts
 console.log("Server starting...");
 console.log("Environment:", process.env.NODE_ENV);
 console.log("Vercel URL:", process.env.VERCEL_URL);
+
+// Add debug logging for Socket.IO
+io.engine.on("connection_error", (err) => {
+  console.log("Connection error:", err);
+});
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
@@ -41,8 +50,22 @@ app.get("/api/health", (req, res) => {
     status: "ok", 
     environment: process.env.NODE_ENV, 
     url: process.env.VERCEL_URL,
-    socketio: "configured"
+    socketio: "configured",
+    timestamp: new Date().toISOString()
   });
+});
+
+// Socket.IO status endpoint
+app.get("/api/socket-status", (req, res) => {
+  const status = {
+    socketConnected: io.engine.clientsCount > 0,
+    activeConnections: io.engine.clientsCount,
+    activeSessions: sessions.size,
+    sessionsList: Array.from(sessions.keys()),
+    timestamp: new Date().toISOString()
+  };
+  
+  res.json(status);
 });
 
 // Store sessions, users and ideas

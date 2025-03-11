@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "build": "echo 'Building Stormer application...'",
+    "build": "npm install",
     "vercel-build": "echo 'Vercel build completed successfully'"
   },
   "engines": {
@@ -14,9 +14,6 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "next": "^15.2.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "socket.io": "^4.7.2",
     "@socket.io/sticky": "^1.0.0",
     "@socket.io/cluster-adapter": "^0.2.2"

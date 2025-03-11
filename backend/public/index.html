@@ -9,11 +9,28 @@
     <link rel="stylesheet" href="/css/templates.css">
     <link rel="stylesheet" href="/css/layout.css">
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      // Check if WebSockets are supported
+      if (!window.WebSocket) {
+        console.log("WebSockets not supported, adding polyfill");
+        document.write('<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"><\/script>');
+      }
+    </script>
   </head>
   <body>
     <div id="connection-status" class="connection-status disconnected">
       <span class="status-icon"></span>
       <span class="status-text">Disconnected</span>
+    </div>
+    
+    <!-- Fallback message for when real-time is not available -->
+    <div id="fallback-message" style="display: none;" class="fallback-message">
+      <div class="fallback-content">
+        <h2>Limited Functionality Mode</h2>
+        <p>We're having trouble establishing a real-time connection to our servers.</p>
+        <p>You can still use basic features, but real-time collaboration may be limited.</p>
+        <button onclick="window.location.reload()" class="primary-button">Try Again</button>
+      </div>
     </div>
     
     <div id="home-screen" class="centered-content">
