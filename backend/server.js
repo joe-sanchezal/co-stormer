@@ -7,7 +7,15 @@ const path = require("path");
 // Create Express app
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+
+// Configure CORS for socket.io in production
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.VERCEL_URL || "http://localhost:3001",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
@@ -15,6 +23,11 @@ app.use(express.static(path.join(__dirname, "public")));
 // Serve index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Health check endpoint for Vercel
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
 // Store sessions, users and ideas
@@ -114,22 +127,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Handle disconnection
-  socket.on("disconnect", () => {
-    if (socket.session) {
-      const session = sessions.get(socket.session);
-      if (session) {
-        session.users = session.users.filter(user => user !== socket.username);
-        
-        if (session.users.length === 0) {
-          sessions.delete(socket.session);
-        } else {
-          io.to(socket.session).emit("user-left", session.users);
-        }
-      }
-    }
-  });
-  
   // Handle leave session
   socket.on("leave-session", (data) => {
     if (data.session) {
@@ -149,7 +146,7 @@ io.on("connection", (socket) => {
       }
     }
   });
-  
+
   // Handle request for session data
   socket.on("request-session-data", (data) => {
     const session = sessions.get(data.session);
@@ -164,7 +161,7 @@ io.on("connection", (socket) => {
       });
     }
   });
-  
+
   // Handle end session
   socket.on("end-session", (data) => {
     const session = sessions.get(data.session);
@@ -173,10 +170,31 @@ io.on("connection", (socket) => {
       sessions.delete(data.session);
     }
   });
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    if (socket.session) {
+      const session = sessions.get(socket.session);
+      if (session) {
+        session.users = session.users.filter(user => user !== socket.username);
+        
+        if (session.users.length === 0) {
+          sessions.delete(socket.session);
+        } else {
+          io.to(socket.session).emit("user-left", session.users);
+        }
+      }
+    }
+  });
 });
 
 // Start server
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+// Export for Vercel
+module.exports = app;
